@@ -11,8 +11,9 @@ let score = 0;
 let maxLives = 5;
 let lives = maxLives;
 let isGameOver = false;
+let gameStarted = false; 
 let animationFrameId; 
-let audioCtx = null; // Global audio engine handle
+let audioCtx = null; 
 
 // Player Setup
 const player = {
@@ -42,30 +43,40 @@ function setupInputListeners() {
 
     if (restartBtn) restartBtn.onclick = resetGame;
 
-    // START BUTTON: This explicit click unlocks audio context pipelines safely on iOS & Android
+    // START GAME BUTTON FIX: Safely removes menu layout and runs update frames instantly
     if (startBtn) {
         startBtn.onclick = () => {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-            }
-            startScreen.style.display = "none";
+            initAudio(); 
+            if (startScreen) startScreen.style.display = "none";
+            gameStarted = true;
             resetGame();
         };
     }
 
     if (leftBtn && rightBtn) {
-        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; initAudio(); });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowLeft"] = false; });
-        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; initAudio(); });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowRight"] = false; });
 
-        leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
+        leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; initAudio(); });
         leftBtn.addEventListener("mouseup", () => keys["ArrowLeft"] = false);
         leftBtn.addEventListener("mouseleave", () => keys["ArrowLeft"] = false);
-        rightBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
+        rightBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowRight"] = true; initAudio(); });
         rightBtn.addEventListener("mouseup", () => keys["ArrowRight"] = false);
         rightBtn.addEventListener("mouseleave", () => keys["ArrowRight"] = false);
+    }
+}
+
+function initAudio() {
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
 }
 
@@ -85,11 +96,6 @@ let enemySpawnTimeout;
 function playLaserSound() {
     if (!audioCtx) return;
     try {
-        // Resume audio context pipeline safely if suspended
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-        
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         
@@ -113,7 +119,7 @@ function playLaserSound() {
 }
 
 function spawnEnemy() {
-    if (isGameOver) return;
+    if (isGameOver || !gameStarted) return;
     const size = 45; 
     const randomNation = nations[Math.floor(Math.random() * nations.length)];
 
@@ -254,7 +260,7 @@ function drawPlayerJet(x, y, w, h) {
 }
 
 function update() {
-    if (isGameOver) return;
+    if (isGameOver || !gameStarted) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -292,7 +298,3 @@ function update() {
             triggerGameOver();
             return;
         }
-
-        if (enemies[i].y > canvas.height) {
-            enemies.splice(i, 1);
-            lives--;
