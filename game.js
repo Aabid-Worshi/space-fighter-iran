@@ -12,7 +12,7 @@ let maxLives = 5;
 let lives = maxLives;
 let isGameOver = false;
 let gameStarted = false; 
-let animationFrameId; 
+let animationFrameId = null; 
 let audioCtx = null; 
 
 // Player Setup
@@ -26,7 +26,7 @@ const player = {
 
 let keys = { ArrowLeft: false, ArrowRight: false };
 
-// Keyboard Controls
+// Keyboard Action Mappings
 document.addEventListener("keydown", (e) => {
     if(e.code === "ArrowLeft" || e.code === "KeyA") keys["ArrowLeft"] = true;
     if(e.code === "ArrowRight" || e.code === "KeyD") keys["ArrowRight"] = true;
@@ -36,17 +36,19 @@ document.addEventListener("keyup", (e) => {
     if(e.code === "ArrowRight" || e.code === "KeyD") keys["ArrowRight"] = false;
 });
 
-function setupInputListeners() {
+// Primary Initialization Routine
+function initializeGameEngine() {
     const leftBtn = document.getElementById("leftBtn");
     const rightBtn = document.getElementById("rightBtn");
     const restartBtn = document.getElementById("restartBtn");
 
     if (restartBtn) restartBtn.onclick = resetGame;
 
-    // START GAME BUTTON FIX: Safely removes menu layout and runs update frames instantly
+    // Fixed Trigger Routing Mechanism
     if (startBtn) {
-        startBtn.onclick = () => {
-            initAudio(); 
+        startBtn.onclick = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            safelyUncageAudioEngine(); 
             if (startScreen) startScreen.style.display = "none";
             gameStarted = true;
             resetGame();
@@ -54,36 +56,31 @@ function setupInputListeners() {
     }
 
     if (leftBtn && rightBtn) {
-        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; initAudio(); });
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; safelyUncageAudioEngine(); });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowLeft"] = false; });
-        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; initAudio(); });
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; safelyUncageAudioEngine(); });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowRight"] = false; });
 
-        leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; initAudio(); });
+        leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; safelyUncageAudioEngine(); });
         leftBtn.addEventListener("mouseup", () => keys["ArrowLeft"] = false);
         leftBtn.addEventListener("mouseleave", () => keys["ArrowLeft"] = false);
-        rightBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowRight"] = true; initAudio(); });
+        rightBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowRight"] = true; safelyUncageAudioEngine(); });
         rightBtn.addEventListener("mouseup", () => keys["ArrowRight"] = false);
         rightBtn.addEventListener("mouseleave", () => keys["ArrowRight"] = false);
     }
+
+    // Baseline Pre-Render Framework Pass
+    renderMenuStatePreview();
 }
 
-function initAudio() {
+function safelyUncageAudioEngine() {
     if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) {
-            audioCtx = new AudioContextClass();
-        }
+        if (AudioContextClass) audioCtx = new AudioContextClass();
     }
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupInputListeners);
-} else {
-    setupInputListeners();
 }
 
 let lasers = [];
@@ -96,12 +93,13 @@ let enemySpawnTimeout;
 function playLaserSound() {
     if (!audioCtx) return;
     try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        
         oscillator.type = 'sawtooth'; 
         
         const now = audioCtx.currentTime;
@@ -114,7 +112,7 @@ function playLaserSound() {
         oscillator.start(now);
         oscillator.stop(now + 0.15);
     } catch (error) {
-        console.log("Audio Error:", error);
+        console.log("Audio pipeline exception caught seamlessly.", error);
     }
 }
 
@@ -148,7 +146,7 @@ function resetGame() {
     player.y = canvas.height - 160;
     
     clearTimeout(enemySpawnTimeout);
-    cancelAnimationFrame(animationFrameId); 
+    if (animationFrameId) cancelAnimationFrame(animationFrameId); 
     
     spawnEnemy();
     update();
@@ -243,6 +241,7 @@ function drawPlayerJet(x, y, w, h) {
     ctx.lineTo(x + w * 0.3, y + h);
     ctx.lineTo(x + w * 0.7, y + h);
     ctx.lineTo(x + w * 0.7, y + h * 0.65);
+    ctx.lineTo(x, y + h * 0.75); 
     ctx.lineTo(x + w, y + h * 0.75); 
     ctx.lineTo(x + w * 0.7, y + h * 0.3);
     ctx.closePath();
@@ -293,8 +292,3 @@ function update() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].y += enemies[i].speed;
         drawEnemyJet(enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height, enemies[i].nation);
-
-        if (checkCollision(player, enemies[i])) {
-            triggerGameOver();
-            return;
-        }
