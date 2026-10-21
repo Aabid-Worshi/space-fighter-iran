@@ -4,12 +4,14 @@ const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const gameOverScreen = document.getElementById("game-over-screen");
 
+// Game States
 let score = 0;
 let maxLives = 5;
 let lives = maxLives;
 let isGameOver = false;
-let animationFrameId;
+let animationFrameId; // Prevents overlapping loops from freezing the screen
 
+// Player Setup
 const player = {
     x: 175,
     y: 420, 
@@ -18,47 +20,40 @@ const player = {
     speed: 6
 };
 
-let keys = { ArrowLeft: false, ArrowRight: false, Space: false };
+// Removed space key tracker since fire is now completely automatic
+let keys = { ArrowLeft: false, ArrowRight: false };
 
+// Keyboard Controls (Only tracking Left and Right movement now)
 document.addEventListener("keydown", (e) => {
     if(e.code === "ArrowLeft" || e.code === "KeyA") keys["ArrowLeft"] = true;
     if(e.code === "ArrowRight" || e.code === "KeyD") keys["ArrowRight"] = true;
-    if(e.code === "Space" || e.code === "ArrowUp") {
-        e.preventDefault();
-        keys["Space"] = true;
-    }
 });
 document.addEventListener("keyup", (e) => {
     if(e.code === "ArrowLeft" || e.code === "KeyA") keys["ArrowLeft"] = false;
     if(e.code === "ArrowRight" || e.code === "KeyD") keys["ArrowRight"] = false;
-    if(e.code === "Space" || e.code === "ArrowUp") keys["Space"] = false;
 });
 
 function setupInputListeners() {
     const leftBtn = document.getElementById("leftBtn");
     const rightBtn = document.getElementById("rightBtn");
-    const shootBtn = document.getElementById("shootBtn");
     const restartBtn = document.getElementById("restartBtn");
 
     if (restartBtn) restartBtn.onclick = resetGame;
 
-    if (leftBtn && rightBtn && shootBtn) {
+    if (leftBtn && rightBtn) {
+        // Mobile Touch Listeners for movement
         leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowLeft"] = false; });
         rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowRight"] = false; });
-        shootBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["Space"] = true; });
-        shootBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["Space"] = false; });
 
+        // PC Mouse Fallbacks for movement
         leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
         leftBtn.addEventListener("mouseup", () => keys["ArrowLeft"] = false);
         leftBtn.addEventListener("mouseleave", () => keys["ArrowLeft"] = false);
         rightBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
         rightBtn.addEventListener("mouseup", () => keys["ArrowRight"] = false);
         rightBtn.addEventListener("mouseleave", () => keys["ArrowRight"] = false);
-        shootBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["Space"] = true; });
-        shootBtn.addEventListener("mouseup", () => keys["Space"] = false);
-        shootBtn.addEventListener("mouseleave", () => keys["Space"] = false);
     }
 }
 
@@ -71,7 +66,7 @@ if (document.readyState === "loading") {
 let lasers = [];
 let enemies = [];
 let lastShotTime = 0;
-const shootCooldown = 200; 
+const shootCooldown = 200; // Time gap between automatic shots (milliseconds)
 const nations = ["USA", "Israel", "France", "Germany", "Britain"];
 let enemySpawnTimeout;
 
@@ -105,7 +100,7 @@ function resetGame() {
     player.y = canvas.height - 160;
     
     clearTimeout(enemySpawnTimeout);
-    cancelAnimationFrame(animationFrameId);
+    cancelAnimationFrame(animationFrameId); 
     
     spawnEnemy();
     update();
@@ -161,14 +156,14 @@ function drawEnemyJet(x, y, w, h, nation) {
 
 function drawJetBody(x, y, w, h) {
     ctx.beginPath();
-    ctx.moveTo(x + w * 0.5, y + h);
+    ctx.moveTo(x + w * 0.5, y + h); 
     ctx.lineTo(x + w * 0.1, y + h * 0.6);
-    ctx.lineTo(x, y + h * 0.35);
+    ctx.lineTo(x, y + h * 0.35); 
     ctx.lineTo(x + w * 0.3, y + h * 0.1);
     ctx.lineTo(x + w * 0.4, y);
     ctx.lineTo(x + w * 0.6, y);
     ctx.lineTo(x + w * 0.7, y + h * 0.1);
-    ctx.lineTo(x + w, y + h * 0.35);
+    ctx.lineTo(x + w, y + h * 0.35); 
     ctx.lineTo(x + w * 0.9, y + h * 0.6);
     ctx.closePath();
     ctx.fill();
@@ -193,14 +188,14 @@ function drawPlayerJet(x, y, w, h) {
     iranGrad.addColorStop(1, "#da251d");   
     
     ctx.beginPath();
-    ctx.moveTo(x + w * 0.5, y);
+    ctx.moveTo(x + w * 0.5, y); 
     ctx.lineTo(x + w * 0.28, y + h * 0.3);
-    ctx.lineTo(x, y + h * 0.75);
+    ctx.lineTo(x, y + h * 0.75); 
     ctx.lineTo(x + w * 0.3, y + h * 0.65);
     ctx.lineTo(x + w * 0.3, y + h);
     ctx.lineTo(x + w * 0.7, y + h);
     ctx.lineTo(x + w * 0.7, y + h * 0.65);
-    ctx.lineTo(x + w, y + h * 0.75);
+    ctx.lineTo(x + w, y + h * 0.75); 
     ctx.lineTo(x + w * 0.7, y + h * 0.3);
     ctx.closePath();
 
@@ -221,11 +216,13 @@ function update() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Lateral movement controls tracking
     if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
     if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += player.speed;
 
+    // 🔥 AUTOMATIC SHOOTING OVERRIDE SYSTEM (No longer requires checking space keys)
     const currentTime = Date.now();
-    if (keys["Space"] && currentTime - lastShotTime > shootCooldown) {
+    if (currentTime - lastShotTime > shootCooldown) {
         lasers.push({
             x: player.x + player.width / 2 - 2,
             y: player.y,
