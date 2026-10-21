@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
 const gameOverScreen = document.getElementById("game-over-screen");
+const startScreen = document.getElementById("start-screen");
+const startBtn = document.getElementById("startBtn");
 
 // Game States
 let score = 0;
@@ -10,6 +12,7 @@ let maxLives = 5;
 let lives = maxLives;
 let isGameOver = false;
 let animationFrameId; 
+let audioCtx = null; // Global audio engine handle
 
 // Player Setup
 const player = {
@@ -39,6 +42,18 @@ function setupInputListeners() {
 
     if (restartBtn) restartBtn.onclick = resetGame;
 
+    // START BUTTON: This explicit click unlocks audio context pipelines safely on iOS & Android
+    if (startBtn) {
+        startBtn.onclick = () => {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioCtx = new AudioContextClass();
+            }
+            startScreen.style.display = "none";
+            resetGame();
+        };
+    }
+
     if (leftBtn && rightBtn) {
         leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowLeft"] = false; });
@@ -67,40 +82,33 @@ const shootCooldown = 200;
 const nations = ["USA", "Israel", "France", "Germany", "Britain"];
 let enemySpawnTimeout;
 
-// 🔥 SYNTHESIZER SOUND ENGINE: Generates a high-quality electronic laser sound programmatically
 function playLaserSound() {
+    if (!audioCtx) return;
     try {
-        // Initialize the standard or fallback audio context safely
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
+        // Resume audio context pipeline safely if suspended
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
         
-        const audioCtx = new AudioContext();
-        
-        // Create an oscillator node (sound wave generator)
         const oscillator = audioCtx.createOscillator();
-        // Create a gain node (volume controller)
         const gainNode = audioCtx.createGain();
         
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
-        // Configure sound wave shape type
         oscillator.type = 'sawtooth'; 
         
-        // Dynamic Frequency Pitch Sweep (Starts high, drops rapidly like a real sci-fi laser)
         const now = audioCtx.currentTime;
-        oscillator.frequency.setValueAtTime(880, now); // Starting frequency (High pitch A note)
-        oscillator.frequency.exponentialRampToValueAtTime(110, now + 0.15); // End frequency (Low pitch)
+        oscillator.frequency.setValueAtTime(880, now); 
+        oscillator.frequency.exponentialRampToValueAtTime(110, now + 0.15); 
         
-        // Fade Out volume control envelope so it sounds clean and doesn't click
-        gainNode.gain.setValueAtTime(0.15, now); // Set initial volume
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15); // Smooth fade to silence
+        gainNode.gain.setValueAtTime(0.12, now); 
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15); 
         
-        // Trigger and clean up audio node instances
         oscillator.start(now);
         oscillator.stop(now + 0.15);
     } catch (error) {
-        console.log("Audio play blocked until direct screen contact occurs.", error);
+        console.log("Audio Error:", error);
     }
 }
 
@@ -263,7 +271,7 @@ function update() {
             speed: 9
         });
         
-        playLaserSound(); // 🔥 Triggers audio stream upon laser push creation instances
+        playLaserSound(); 
         lastShotTime = currentTime;
     }
 
@@ -282,3 +290,9 @@ function update() {
 
         if (checkCollision(player, enemies[i])) {
             triggerGameOver();
+            return;
+        }
+
+        if (enemies[i].y > canvas.height) {
+            enemies.splice(i, 1);
+            lives--;
