@@ -7,28 +7,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Top Neon Designer Badge -->
+    <!-- Top Designer Badge Header -->
     <div id="designer-header">
         <span>Designed by</span> Aabid Hussain
     </div>
 
-    <!-- Main Game Window Frame -->
     <div id="game-container">
-        <!-- Live HUD Status Counters -->
+        <!-- UI Tracker Matrix -->
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
             <div>Lives: <span id="lives">5</span>/5</div>
         </div>
         
         <canvas id="gameCanvas" width="400" height="600"></canvas>
-
-        <!-- Dynamic Menu Overlays -->
-        <div id="start-screen">
-            <h2>Space Fighter</h2>
-            <p>Aabid Hussain Edition</p>
-            <button id="startBtn">START GAME</button>
-        </div>
 
         <div id="game-over-screen">
             <h1>GAME OVER</h1>
@@ -37,19 +28,18 @@
             <button id="restartBtn">Restart</button>
         </div>
         
-        <!-- Touch Controls Layout -->
+        <!-- Movement Direction Controls -->
         <div id="mobile-controls">
-            <button id="leftBtn" type="button">◀</button>
-            <button id="rightBtn" type="button">▶</button>
+            <button id="leftBtn">◀</button>
+            <button id="rightBtn">▶</button>
         </div>
     </div>
 
-    <!-- Elegant Region Footer Label -->
+    <!-- Elegant Bottom Region Label -->
     <div id="chinar-footer">
         🍁 Chinar Kashmir 🍁
     </div>
     
-    <!-- Using version cache busting token to guarantee updates refresh on all mobiles -->
-    <script src="game.js?v=999"></script>
+    <script src="game.js?v=3"></script>
 </body>
 </html>
