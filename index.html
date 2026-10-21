@@ -2,21 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Space Shooter - Aabid Hussain Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Top Designer Badge Header -->
+    <div id="designer-header">
+        <span>Designed by</span> Aabid Hussain
+    </div>
+
     <div id="game-container">
-        <!-- गेम हेडर जहां लाइव्स और स्कोर दिखेगा -->
+        <!-- UI Tracker Matrix -->
         <div id="ui">
             <div>Score: <span id="score">0</span></div>
             <div>Lives: <span id="lives">5</span>/5</div>
         </div>
         
         <canvas id="gameCanvas" width="400" height="600"></canvas>
-        
-        <div id="credit-watermark">Designed by Aabid Hussain</div>
 
         <div id="game-over-screen">
             <h1>GAME OVER</h1>
@@ -25,13 +28,18 @@
             <button id="restartBtn">Restart</button>
         </div>
         
+        <!-- Movement Direction Controls -->
         <div id="mobile-controls">
             <button id="leftBtn">◀</button>
-            <button id="shootBtn">🚀 FIRE</button>
             <button id="rightBtn">▶</button>
         </div>
     </div>
+
+    <!-- Elegant Bottom Region Label -->
+    <div id="chinar-footer">
+        🍁 Chinar Kashmir 🍁
+    </div>
     
-    <script src="game.js?v=2"></script>
+    <script src="game.js?v=3"></script>
 </body>
 </html>
