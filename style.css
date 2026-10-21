@@ -4,29 +4,65 @@
     padding: 0;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: manipulation;
 }
+
 body {
-    background-color: #0d1117;
-    font-family: system-ui, -apple-system, sans-serif;
+    background-color: #07090e;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     color: #ffffff;
     overflow: hidden;
+    padding: 10px;
 }
+
+/* Beautiful Top Header Badge */
+#designer-header {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #00ffcc;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 204, 0.2);
+}
+
+#designer-header span {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+    font-size: 13px;
+    text-transform: lowercase;
+}
+
+/* Elastic Game Border Shell fitting both Mobile & Laptop windows */
 #game-container {
     position: relative;
-    width: 400px;
-    height: 600px;
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
-    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    height: 80vh;
+    max-height: 600px;
+    aspect-ratio: 2 / 3;
+    box-shadow: 0 0 35px rgba(0, 255, 204, 0.15);
+    border-radius: 14px;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 #gameCanvas {
-    background: radial-gradient(circle at center, #10141d 0%, #07090e 100%);
+    background: radial-gradient(circle at center, #10141d 0%, #05070a 100%);
+    width: 100%;
+    height: 100%;
     display: block;
 }
+
 #ui {
     position: absolute;
     top: 15px;
@@ -40,21 +76,14 @@ body {
     text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
     z-index: 5;
 }
-#credit-watermark {
-    position: absolute;
-    bottom: 95px;
-    right: 15px;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.3);
-    z-index: 5;
-}
+
 #game-over-screen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(13, 17, 23, 0.9);
+    background: rgba(7, 9, 14, 0.95);
     backdrop-filter: blur(6px);
     display: none;
     flex-direction: column;
@@ -62,22 +91,26 @@ body {
     align-items: center;
     z-index: 10;
 }
+
 #game-over-screen h1 {
     font-size: 42px;
     color: #ff4444;
     margin-bottom: 5px;
     text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
+
 #final-stats {
-    font-size: 15px;
+    font-size: 14px;
     color: #e2e8f0;
     margin-bottom: 20px;
 }
+
 .game-over-credit {
     font-size: 13px;
     color: rgba(255, 255, 255, 0.5);
     margin-bottom: 25px;
 }
+
 #restartBtn {
     padding: 12px 35px;
     font-size: 18px;
@@ -87,29 +120,50 @@ body {
     border: none;
     border-radius: 25px;
     cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
 }
+
+/* Fluid Bottom Controls */
 #mobile-controls {
     position: absolute;
     bottom: 20px;
     left: 0;
     width: 100%;
     display: flex;
-    justify-content: space-around;
-    padding: 0 10px;
+    justify-content: space-between;
+    padding: 0 30px;
     z-index: 5;
 }
+
 #mobile-controls button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: white;
-    font-size: 18px;
+    font-size: 22px;
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 65px;
+    height: 65px;
     cursor: pointer;
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
-#shootBtn {
-    width: 110px !important;
-    border-radius: 30px !important;
-    font-weight: bold;
+
+#mobile-controls button:active {
+    background: rgba(0, 255, 204, 0.3);
+    border-color: #00ffcc;
+    transform: scale(0.95);
+}
+
+/* Elegant Bottom Region Footer Label */
+#chinar-footer {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 3px;
+    margin-top: 15px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
 }
