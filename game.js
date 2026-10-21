@@ -9,7 +9,7 @@ let score = 0;
 let maxLives = 5;
 let lives = maxLives;
 let isGameOver = false;
-let animationFrameId; // Prevents overlapping loops from freezing the screen
+let animationFrameId; 
 
 // Player Setup
 const player = {
@@ -20,10 +20,9 @@ const player = {
     speed: 6
 };
 
-// Removed space key tracker since fire is now completely automatic
 let keys = { ArrowLeft: false, ArrowRight: false };
 
-// Keyboard Controls (Only tracking Left and Right movement now)
+// Keyboard Controls
 document.addEventListener("keydown", (e) => {
     if(e.code === "ArrowLeft" || e.code === "KeyA") keys["ArrowLeft"] = true;
     if(e.code === "ArrowRight" || e.code === "KeyD") keys["ArrowRight"] = true;
@@ -41,13 +40,11 @@ function setupInputListeners() {
     if (restartBtn) restartBtn.onclick = resetGame;
 
     if (leftBtn && rightBtn) {
-        // Mobile Touch Listeners for movement
         leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowLeft"] = false; });
         rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); keys["ArrowRight"] = true; });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); keys["ArrowRight"] = false; });
 
-        // PC Mouse Fallbacks for movement
         leftBtn.addEventListener("mousedown", (e) => { e.preventDefault(); keys["ArrowLeft"] = true; });
         leftBtn.addEventListener("mouseup", () => keys["ArrowLeft"] = false);
         leftBtn.addEventListener("mouseleave", () => keys["ArrowLeft"] = false);
@@ -66,9 +63,46 @@ if (document.readyState === "loading") {
 let lasers = [];
 let enemies = [];
 let lastShotTime = 0;
-const shootCooldown = 200; // Time gap between automatic shots (milliseconds)
+const shootCooldown = 200; 
 const nations = ["USA", "Israel", "France", "Germany", "Britain"];
 let enemySpawnTimeout;
+
+// 🔥 SYNTHESIZER SOUND ENGINE: Generates a high-quality electronic laser sound programmatically
+function playLaserSound() {
+    try {
+        // Initialize the standard or fallback audio context safely
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const audioCtx = new AudioContext();
+        
+        // Create an oscillator node (sound wave generator)
+        const oscillator = audioCtx.createOscillator();
+        // Create a gain node (volume controller)
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Configure sound wave shape type
+        oscillator.type = 'sawtooth'; 
+        
+        // Dynamic Frequency Pitch Sweep (Starts high, drops rapidly like a real sci-fi laser)
+        const now = audioCtx.currentTime;
+        oscillator.frequency.setValueAtTime(880, now); // Starting frequency (High pitch A note)
+        oscillator.frequency.exponentialRampToValueAtTime(110, now + 0.15); // End frequency (Low pitch)
+        
+        // Fade Out volume control envelope so it sounds clean and doesn't click
+        gainNode.gain.setValueAtTime(0.15, now); // Set initial volume
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15); // Smooth fade to silence
+        
+        // Trigger and clean up audio node instances
+        oscillator.start(now);
+        oscillator.stop(now + 0.15);
+    } catch (error) {
+        console.log("Audio play blocked until direct screen contact occurs.", error);
+    }
+}
 
 function spawnEnemy() {
     if (isGameOver) return;
@@ -216,11 +250,9 @@ function update() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Lateral movement controls tracking
     if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
     if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += player.speed;
 
-    // 🔥 AUTOMATIC SHOOTING OVERRIDE SYSTEM (No longer requires checking space keys)
     const currentTime = Date.now();
     if (currentTime - lastShotTime > shootCooldown) {
         lasers.push({
@@ -230,6 +262,8 @@ function update() {
             height: 16,
             speed: 9
         });
+        
+        playLaserSound(); // 🔥 Triggers audio stream upon laser push creation instances
         lastShotTime = currentTime;
     }
 
@@ -248,39 +282,3 @@ function update() {
 
         if (checkCollision(player, enemies[i])) {
             triggerGameOver();
-            return;
-        }
-
-        if (enemies[i].y > canvas.height) {
-            enemies.splice(i, 1);
-            lives--;
-            if(livesEl) livesEl.innerText = lives;
-            if (lives <= 0) {
-                triggerGameOver();
-                return;
-            }
-            continue;
-        }
-
-        for (let j = lasers.length - 1; j >= 0; j--) {
-            if (checkCollision(lasers[j], enemies[i])) {
-                enemies.splice(i, 1);
-                lasers.splice(j, 1);
-                score += 10;
-                if(scoreEl) scoreEl.innerText = score;
-                break;
-            }
-        }
-    }
-
-    animationFrameId = requestAnimationFrame(update);
-}
-
-function triggerGameOver() {
-    isGameOver = true;
-    if(gameOverScreen) gameOverScreen.style.display = "flex";
-    clearTimeout(enemySpawnTimeout);
-    cancelAnimationFrame(animationFrameId);
-}
-
-resetGame();
